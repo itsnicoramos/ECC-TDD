@@ -38,3 +38,26 @@ Learned   Two things worth not rediscovering.
              reveals it. Any view over an RLS table needs the option and an assertion.
           Also: the `authenticated` role tests passed on first run — they closed a coverage
           gap, not a defect. Worth stating plainly rather than counting as a fix.
+
+## 2026-10-04 — the loop became a skill
+Item      unplanned (user request)
+Change    New project-scoped skill `.claude/skills/advancing-the-bench/SKILL.md` (124 lines).
+          `/forge` shrank to a thin shim pointing at it, so there is one copy of the method.
+          CLAUDE.md and README updated. No change to `skill/SKILL.md`.
+Baseline  Not re-measured — the loop that does so was only just written. F-09 opened for the
+          first real pass.
+Evals     None. The loop skill has no evals of its own yet, which by CLAUDE.md rule 7 makes it
+          unproven like everything else here.
+Verdict   kept-but-unproven
+Learned   From researching current practice, three things worth not rediscovering.
+          1. **`skill-creator` already does generic skill evaluation** — paired with-skill and
+             baseline subagents, grading, description optimisation, variance analysis. Building
+             that here would have been duplication. The loop delegates to it.
+          2. **Nobody can reliably measure whether a description actually fired.** Published
+             trigger harnesses report near-zero recall on that measurement. `evals/triggers.md`
+             measures description *quality*; claiming it measures activation would be the same
+             species of overstatement the skill exists to prevent.
+          3. **Eval results must be read against a freshly measured no-skill baseline**, and
+             mean scores fall as the baseline strengthens. So "only write diffs against default
+             behaviour" has an expiry date, and a loop that never deletes is how a skill rots.
+             Re-baselining and deletion are now steps 3 and a valid verdict, respectively.

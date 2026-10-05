@@ -60,13 +60,13 @@ not a check.
 Personal, available in every project:
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/hardware-bringup.git /tmp/hb && cp -R /tmp/hb/skill ~/.claude/skills/hardware-bringup
+git clone https://github.com/itsnicoramos/spec-to-ship.git /tmp/hb && cp -R /tmp/hb/skill ~/.claude/skills/hardware-bringup
 ```
 
 Or scoped to one project, committed with the firmware:
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/hardware-bringup.git /tmp/hb && cp -R /tmp/hb/skill .claude/skills/hardware-bringup
+git clone https://github.com/itsnicoramos/spec-to-ship.git /tmp/hb && cp -R /tmp/hb/skill .claude/skills/hardware-bringup
 ```
 
 Then just work. The skill activates on its own — "wire this up", "the board keeps resetting",
@@ -99,6 +99,7 @@ skill/
     bench-cards.md      card templates by check class
 evals/                  does it fire, and does it refuse to lie under pressure
 docs/                   design notes
+.claude/skills/         advancing-the-bench — the loop that improves this repo
 SPEC.md                 bench console requirements
 apps/console/           the operator's phone app (Next.js + TypeScript + Supabase)
 supabase/migrations/    schema and RLS
@@ -127,7 +128,7 @@ works alone with a terminal and a human who answers in chat.
 
 ## Composing with spec-to-ship
 
-If you run [`spec-to-ship`](https://github.com/YOUR-USERNAME/spec-to-ship), that skill owns the
+If you run `spec-to-ship`, that skill owns the
 plan → build → review loop and hands its hardware verification here. It produces the slice;
 this produces the bench card and the verified/unverified counts its approval gate reports.
 Neither needs the other installed.

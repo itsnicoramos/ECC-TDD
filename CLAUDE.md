@@ -50,11 +50,25 @@ twenty plausible entries.
 
 ## The loop
 
-Run `/forge` to advance the skill by one improvement. It reads BACKLOG.md and JOURNAL.md,
-makes exactly one change, evaluates it, and logs the result — including negative results.
+`/forge`, or the `advancing-the-bench` skill it invokes, advances the repo by one evaluated,
+logged step — routing between the skill half and the console half, and re-baselining before it
+adds anything.
 
 **One change per run.** Same reason as the skill's own "one new variable per flash": if the
 description and a rule both moved and the evals shifted, nothing was learned.
+
+**Re-baseline before adding.** Rule 1 above — only diffs against default behaviour — is a claim
+with an expiry date. Models improve, and a rule can quietly become something the model already
+does unprompted, at which point it is noise competing for context. The loop re-measures against
+a fresh no-skill baseline and **deletes** rules that have gone stale. A deletion is a successful
+run, not a failed one.
+
+**Eval mechanics are delegated.** `skill-creator` already runs paired with-skill/baseline
+subagents, grades them, and optimises descriptions. Don't rebuild that here. What this repo
+adds is the routing, the cross-session memory, and the re-baseline pass.
+
+**Trigger evals measure description quality, not activation.** There is no reliable way to
+observe whether a description actually fired in-harness. Say so whenever reporting them.
 
 ## Rules for apps/console
 
@@ -86,4 +100,6 @@ evals/scenarios/        synthetic benches — exercise the skill with no hardwar
 BACKLOG.md              ranked, with blockers named
 JOURNAL.md              what changed, what the evals said, what is still unknown
 docs/design.md          why the skill exists, in one page
+.claude/skills/         advancing-the-bench — this repo's own loop (project-scoped)
+.claude/commands/       /forge — typed entry point for that loop
 ```
