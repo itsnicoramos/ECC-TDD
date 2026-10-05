@@ -77,23 +77,23 @@ Two deliberate details:
 `supabase/tests/{00_schema,01_rls,02_state}.test.sql`, `supabase/database.types.ts`,
 `.gitignore`.
 
-## Open questions — need a decision before T4
+## Decisions (GATE 1, approved 2026-10-04)
 
-1. **RLS deny-by-default contradicts S3.** With no policies and no auth until S6, the console
+1. **RLS deny-by-default contradicts S3.** → **server-side reads until S6.** With no policies and no auth until S6, the console
    cannot read anything with the anon key — so S3 as written is unbuildable between S1 and S6.
    *Lean:* S3/S4 read and write **server-side only**, using the service-role key in Next.js
    route handlers (never shipped to the browser); S6 replaces that with real user policies.
    Good architecture regardless, and it means no temporary permissive policy is ever created —
    those survive into production.
-2. **Append-only enforcement.** Deny-by-default RLS already blocks UPDATE/DELETE for `anon`
+2. **Append-only enforcement.** → **trigger, as leaned.** Deny-by-default RLS already blocks UPDATE/DELETE for `anon`
    and `authenticated`, but **`service_role` bypasses RLS entirely**, and the agent uses
    `service_role`. True append-only needs a `before update or delete` trigger that raises.
    *Lean:* add the trigger. Cost: fixing a mistyped reading then needs a migration, not an
    `UPDATE`. That cost is the point of an append-only log.
-3. **`fail` requires a reading or a note** — the spec places this in S4 (console write path),
+3. **`fail` requires a reading or a note** → **constraint lands in S1.** — the spec places this in S4 (console write path),
    but a `CHECK` constraint in S1 is the only place it cannot be bypassed, including by the
    agent. *Lean:* put it in S1 and note the deviation under the S4 item.
-4. **`pnpm` is not installed**, and S2's commands are written as `pnpm bench push`. Doesn't
+4. **`pnpm` is not installed** → **spec switches to `npm` at S2.**, and S2's commands are written as `pnpm bench push`. Doesn't
    block S1. *Lean:* switch the spec to `npm` rather than add a package manager.
 
 ## Out of scope for S1
@@ -106,3 +106,18 @@ configuration, seed data beyond test fixtures, CI.
 - `checks.updated_at`, maintained by trigger — S2 upserts cards, and drift will be hard to
   debug without it.
 - Add `projects.owner_id` (nullable) now so S6 is a policy change rather than a schema change.
+
+## Corrections made during execution
+
+- **One migration file, grown across the three RED/GREEN cycles** — not three files. R6 says
+  RLS ships *in the first migration, not added later*; a separate RLS migration would mean
+  migration 1 creates briefly-open tables. The file is edited in place and re-applied with
+  `supabase db reset` between cycles.
+- **Docker is Colima here, not Docker Desktop.** `colima start` (profile: 2 CPU / 3 GiB /
+  8 GiB), not `open -a Docker`. T1 as originally written was wrong about this machine.
+- **Supabase services trimmed to fit 3 GiB.** `realtime`, `studio`, `storage`, `local_smtp`,
+  `edge_runtime` and `analytics` disabled in `supabase/config.toml`; `api`, `db` and `auth`
+  stay (auth because `results.observed_by` references `auth.users`). **S5 must re-enable
+  `realtime`** — that is a forward dependency, recorded here so it is not discovered as a bug.
+- **pgTAP is created inside each test's transaction and rolled back**, rather than enabled by a
+  migration. Keeps a test framework out of the production schema.

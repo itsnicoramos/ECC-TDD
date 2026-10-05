@@ -27,19 +27,25 @@ now a foreign key in practice. The db keys on `(project_id, card_id)`.
 
 ## S1 — Schema and RLS
 
-- [ ] Supabase project runs locally via `supabase start`; migrations in `supabase/migrations/`
-- [ ] `projects` table: `id`, `slug` (unique), `name`, `created_at`
-- [ ] `checks` table: `id`, `project_id`, `card_id` (text, e.g. `B-04`), `title`, `setup`, `action`,
+- [x] Supabase project runs locally via `supabase start`; migrations in `supabase/migrations/`
+- [x] `projects` table: `id`, `slug` (unique), `name`, `created_at`
+- [x] `checks` table: `id`, `project_id`, `card_id` (text, e.g. `B-04`), `title`, `setup`, `action`,
       `expect`, `if_not`, `why`, `risk_rank` (int), `created_at`; unique on `(project_id, card_id)`
-- [ ] `results` table: `id`, `check_id`, `state` enum `pass | fail | blocked`, `reading` (text, nullable),
+- [x] `results` table: `id`, `check_id`, `state` enum `pass | fail | blocked`, `reading` (text, nullable),
       `note` (text, nullable), `observed_at`, `observed_by`
-- [ ] A check's current state is **derived from its latest result**, never stored on `checks`.
+- [x] A check's current state is **derived from its latest result**, never stored on `checks`.
       No result at all means `pending`. Results are append-only — a re-test adds a row, so the
       history of a flaky check is visible rather than overwritten.
-- [ ] RLS enabled on every table, with deny-by-default policies, from the first migration.
+- [x] RLS enabled on every table, with deny-by-default policies, from the first migration.
       Not added later. A bench log is not sensitive, but an anon-writable table is a vandalism
       target and a bad thing to teach anyone reading this repo.
-- [ ] Typed client generated via `supabase gen types typescript`, committed
+- [x] Typed client generated via `supabase gen types typescript`, committed
+
+> **Local service set (recorded during S1).** `supabase/config.toml` disables `realtime`,
+> `studio`, `storage`, `local_smtp`, `edge_runtime` and `analytics` so the stack fits the
+> 3 GiB Colima VM on the dev machine. `api`, `db` and `auth` stay enabled — `auth` because
+> `results.observed_by` references `auth.users`. **S5 must re-enable `realtime`**, which is a
+> forward dependency recorded here rather than discovered later as a bug.
 
 ## S2 — Agent side
 
@@ -66,6 +72,9 @@ now a foreign key in practice. The db keys on `(project_id, card_id)`.
       `dips to 4.1 on start`, and forcing a numeric type would lose the useful half
 - [ ] Fail requires either a reading or a note before it submits. A bare "fail" tells the
       agent nothing it can diagnose
+      > *Deviation (approved at S1 GATE 1): already enforced in the database as
+      > `results_fail_needs_evidence`, so the agent writing through `service_role` is held to
+      > it too. S4 only needs the UI to surface the error before submitting.*
 - [ ] Optimistic UI with rollback on error; a dropped submit must never look like a success
 
 ## S5 — Realtime and export
@@ -85,6 +94,21 @@ now a foreign key in practice. The db keys on `(project_id, card_id)`.
 Multi-project dashboards, photo upload, offline queueing, push notifications, editing cards
 from the phone (the agent owns the card; the phone owns the result), anything that writes back
 into the agent's repo other than `.bringup/state.md`.
+
+## Deferred from review
+
+Raised at a GATE 2 and consciously not fixed. Each names the slice that should absorb it.
+
+- [ ] **(S1)** Behavioural test that `anon` cannot read through `checks_with_state`. The
+      `security_invoker` reloption is asserted, and the behaviour was verified by hand
+      (owner sees 1 row, `anon` sees 0), but no test holds it. The reloption assertion already
+      catches the obvious regression, which is why this was deferred.
+- [ ] **(S3)** Staleness check for `supabase/database.types.ts` — the schema can drift from the
+      committed types silently. Needs the `package.json` that arrives with the console.
+- [ ] **(S6)** `projects.owner_id`. Absent by design in S1, so S6 is a schema change rather
+      than a pure policy change.
+- [ ] **(S2)** `checks.updated_at` maintained by trigger. Suggested during S1, outside the
+      spec: S2 upserts cards and drift will be hard to debug without it.
 
 ## Open questions
 
