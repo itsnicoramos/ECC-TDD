@@ -60,13 +60,13 @@ not a check.
 Personal, available in every project:
 
 ```bash
-git clone https://github.com/itsnicoramos/spec-to-ship.git /tmp/hb && cp -R /tmp/hb/skill ~/.claude/skills/hardware-bringup
+git clone https://github.com/itsnicoramos/Spec-to-ship.git /tmp/hb && cp -R /tmp/hb/skill ~/.claude/skills/hardware-bringup
 ```
 
 Or scoped to one project, committed with the firmware:
 
 ```bash
-git clone https://github.com/itsnicoramos/spec-to-ship.git /tmp/hb && cp -R /tmp/hb/skill .claude/skills/hardware-bringup
+git clone https://github.com/itsnicoramos/Spec-to-ship.git /tmp/hb && cp -R /tmp/hb/skill .claude/skills/hardware-bringup
 ```
 
 Then just work. The skill activates on its own — "wire this up", "the board keeps resetting",
