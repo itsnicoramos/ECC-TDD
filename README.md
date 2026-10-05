@@ -99,7 +99,31 @@ skill/
     bench-cards.md      card templates by check class
 evals/                  does it fire, and does it refuse to lie under pressure
 docs/                   design notes
+SPEC.md                 bench console requirements
+apps/console/           the operator's phone app (Next.js + TypeScript + Supabase)
+supabase/migrations/    schema and RLS
 ```
+
+## The bench console
+
+The skill prints a bench card into a terminal. The operator is across the room holding a
+meter. The console closes that gap: the pending card appears on their phone, they tap a result
+and type the reading, and the agent sees it land over realtime.
+
+```
+agent (terminal)  --write checks-->  Supabase  <--read/write results--  phone
+                  <--read results--     |
+                                        | realtime
+                  .bringup/state.md  <--+   generated export, committed
+```
+
+One design decision carries the rest: **Supabase is authoritative for check state, and
+`.bringup/state.md` is a generated export** — db to file, one direction, never read back as
+truth. Two writers (an agent and a human) sharing one record is the whole problem; a single
+direction of authority is the whole answer.
+
+Requirements and slices live in [SPEC.md](SPEC.md). Neither half needs the other — the skill
+works alone with a terminal and a human who answers in chat.
 
 ## Composing with spec-to-ship
 

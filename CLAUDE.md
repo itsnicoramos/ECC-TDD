@@ -1,6 +1,13 @@
 # Working on this repo
 
-This repo's product is `skill/SKILL.md`. Everything else exists to keep that file honest.
+This repo has two halves of one system:
+
+- **`skill/`** — the `hardware-bringup` skill. The primary product; everything else exists to
+  keep that file honest.
+- **`apps/console/`** — the bench console, a Next.js + Supabase app the operator uses at the
+  bench. Its source of truth is `SPEC.md`, and `spec-to-ship` owns its build loop.
+
+Unless a section says otherwise, the rules below are about `skill/`.
 
 The reader of SKILL.md is **an agent under context pressure, mid-task, with a user waiting** —
 not a human browsing documentation. That single fact drives every rule below.
@@ -49,10 +56,30 @@ makes exactly one change, evaluates it, and logs the result — including negati
 **One change per run.** Same reason as the skill's own "one new variable per flash": if the
 description and a rule both moved and the evals shifted, nothing was learned.
 
+## Rules for apps/console
+
+`SPEC.md` is the source of truth. Don't build from this file, from chat, or from memory of a
+conversation — run `/spec-to-ship`, which plans, gates for approval, builds with TDD, reviews,
+and ticks the spec when it's done.
+
+1. **The contract section of SPEC.md is load-bearing.** Supabase is authoritative for check
+   state; `.bringup/state.md` is a generated export, db → file, one direction. Any change that
+   makes the file authoritative, or lets the app write into the agent's repo beyond that
+   export, needs the spec amended first and the reason recorded.
+2. **RLS in the first migration, never bolted on afterwards.**
+3. **Bench-card ids are a foreign key now.** Skill rule 8 — stable, never reused — stops being
+   a convention and becomes the db's unique `(project_id, card_id)`.
+4. **The console never edits a card.** The agent owns the card; the phone owns the result.
+5. **Console work is tracked in `SPEC.md`, not `BACKLOG.md`.** Two queues for one repo is how
+   both go stale.
+
 ## Map
 
 ```
 skill/SKILL.md          the product
+SPEC.md                 bench console requirements — source of truth for apps/console
+apps/console/           Next.js + TS + Supabase operator app
+supabase/migrations/    schema and RLS
 skill/references/       on-demand detail
 evals/triggers.md       does it fire on real phrasings
 evals/scenarios/        synthetic benches — exercise the skill with no hardware
